@@ -5,3 +5,4 @@ pandas
 sentence-transformers
 scikit-learn
 deep_translator
+flask_bcrypt
