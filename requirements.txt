@@ -1,0 +1,6 @@
+flask
+flask_sqlalchemy
+pandas
+sentence-transformers
+scikit-learn
+deep_translator

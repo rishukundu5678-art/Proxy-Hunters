@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block body %}
+<div class="container mt-5">
+  <div class="row justify-content-center align-items-center">
+    <div class="col-lg-8 text-center">
+
+      <!-- Logo -->
+      <div class="mb-4 d-flex justify-content-center align-items-center">
+        <i class="bi bi-calendar-check brand-logo me-2 text-primary"></i>
+      </div>
+
+      <!-- Heading -->
+      <h1 class="fw-bold mb-3 animate__animated animate__fadeInDown">
+        Welcome to <span class="text-primary">Proxy Hunters</span>
+      </h1>      
+
+      <!-- Buttons -->
+      <div class="d-flex justify-content-center gap-3 my-3">
+        <a href="{{ url_for('register') }}" 
+           class="btn btn-lg shadow-sm px-4 animate__animated animate__fadeInRight"
+           style="background-color: #fff; color: #121111; border: none;">
+          <i class="bi bi-person-plus me-1"></i> Register
+        </a>
+
+        <a href="{{ url_for('login') }}" 
+           class="btn btn-lg shadow-sm px-4 animate__animated animate__fadeInLeft"
+           style="background-color: #198754; color: white; border: none;">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Login
+        </a>
+      </div>
+
+      <!-- Info Card -->
+      <div class="mt-5">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <h4 class="fw-semibold mb-3">🌐 Attendance in the Digital Era</h4>
+            <p class="card-text text-muted">
+              In today’s connected world, attendance is no longer just a manual headcount—it’s a dynamic, data-driven process. 
+              Digital platforms have revolutionized how we track presence, offering real-time updates, biometric integration, 
+              and cloud-based records accessible from anywhere. Whether it's a classroom, office, or remote team, 
+              digital attendance systems enhance transparency, reduce errors, and empower smarter decision-making. 
+              By embracing technology, we transform attendance from a routine task into a strategic tool for engagement, 
+              accountability, and growth.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Animate.css CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<style>
+  .hover-shadow:hover {
+    box-shadow: 0 8px 32px rgba(13,110,253,0.15) !important;
+    transform: translateY(-4px) scale(1.03);
+    transition: all 0.2s;
+  }
+</style>
+{% endblock %}

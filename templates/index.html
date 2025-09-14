@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Blurred background */
+        body {
+            position: relative;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f8f9fa;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: url("{{ url_for('static', filename='rishu5.png') }}");
+            filter: blur(8px);
+            transform: scale(1.1);
+            z-index: -1;
+        }
+
+        /* Glass effect for cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Microphone button */
+        #mic-btn {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #666;
+            user-select: none;
+        }
+        #mic-btn.recording { color: red; }
+
+        /* Loading overlay */
+        #loading-overlay {
+          position: fixed;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          background: rgba(255, 255, 255, 0.9);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+      .loading-content {
+          text-align: center;
+      }
+    </style>
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <i class="bi bi-calendar-check brand-logo me-2 text-primary"></i>
+            <span class="fw-bold">Proxy Hunters</span>
+        </a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="d-none">
+    <div class="loading-content text-center">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 fw-bold">Processing your request... This may take a few minutes.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-6 fw-bold text-white"><i class="bi bi-clipboard-check"></i> Attendance Evaluation</h1>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-card shadow-sm">
+                <form action="{{ url_for('search') }}" method="POST" id="search-form">
+                    <div class="mb-3 position-relative">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-lightbulb me-2"></i>Describe your skills / what you do
+                        </label>
+                        <input type="text" class="form-control" id="description" name="description"
+                               placeholder="e.g., I design and develop user-friendly mobile applications." required>
+                        <span id="mic-btn" title="Click to record" role="button" aria-pressed="false">
+                            <i class="fas fa-microphone"></i>
+                        </span>
+                        <div id="status" class="form-text mt-1 sr-only" aria-live="polite"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="career_goal" class="form-label">
+                            <i class="fas fa-bullseye me-2"></i>Career Goal
+                        </label>
+                        <select class="form-select" id="career_goal" name="career_goal" required>
+                            <option selected disabled>-- Select Goal --</option>
+                            <option value="First Job">First Job</option>
+                            <option value="Upskilling">Upskilling</option>
+                            <option value="Promotion">Promotion</option>
+                            <option value="Change Job">Change Job</option>
+                            <option value="Career Switch">Career Switch</option>
+                            <option value="Freelancing">Freelancing</option>
+                            <option value="Entrepreneurship">Entrepreneurship</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="industry" class="form-label">
+                            <i class="fas fa-industry me-2"></i>Preferred Industry (optional)
+                        </label>
+                        <input type="text" class="form-control" id="industry" name="industry"
+                               placeholder="e.g., IT, Healthcare, Education">
+                    </div>
+                    <div class="mb-3">
+                        <label for="experience" class="form-label">
+                            <i class="fas fa-briefcase me-2"></i>Experience Level (optional)
+                        </label>
+                        <select class="form-select" id="experience" name="experience">
+                            <option selected disabled>-- Select Experience Level --</option>
+                            <option value="Entry Level">Entry Level</option>
+                            <option value="Mid Level">Mid Level</option>
+                            <option value="Senior Level">Senior Level</option>
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i>Find Jobs
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Speech Recognition Script (unchanged) -->
+<script>
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = document.getElementById("mic-btn");
+  const descriptionField = document.getElementById("description");
+  const statusEl = document.getElementById("status");
+
+  let isRecording = false;
+  let recognition = null;
+
+  const LANGS = ["hi-IN", "en-IN"];
+  let langIndex = 0;
+  let shouldFallback = false;
+  const REPLACE_TEXT = true;
+
+  function updateStatus(text, visible = true) {
+    statusEl.textContent = text || "";
+    statusEl.classList.toggle("sr-only", !visible || !text);
+  }
+
+  function playMicOnSound() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.15);
+  }
+
+  if (!SpeechRecognition) {
+    micBtn.title = "Speech recognition not supported in this browser";
+    micBtn.addEventListener("click", () => {
+      alert("Speech recognition not supported. Use Chrome or Edge on desktop/Android.");
+    });
+  } else {
+    micBtn.addEventListener("click", () => {
+      if (!isRecording) startRecognition();
+      else stopRecognition();
+    });
+  }
+
+  function buildRecognizer(lang) {
+    const rec = new SpeechRecognition();
+    rec.lang = lang;
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.continuous = false;
+    return rec;
+  }
+
+  function startRecognition() {
+    recognition = buildRecognizer(LANGS[langIndex]);
+    recognition.onstart = () => {
+      isRecording = true;
+      micBtn.classList.add("recording");
+      micBtn.innerHTML = '<i class="fas fa-stop"></i>';
+      micBtn.setAttribute("aria-pressed", "true");
+      updateStatus(`Listening (${recognition.lang})...`, true);
+      playMicOnSound();
+    };
+    recognition.onerror = (event) => {
+      if (recognition.lang === "hi-IN" && langIndex === 0) {
+        shouldFallback = true;
+        langIndex = 1;
+      } else {
+        updateStatus(`Recognition error: ${event.error || "unknown"}`, true);
+      }
+      try { recognition.stop(); } catch (_) {}
+    };
+    recognition.onresult = async (event) => {
+      try {
+        const alt = event.results[0][0];
+        const spoken = (alt && alt.transcript ? alt.transcript : "").trim();
+        const conf = alt && typeof alt.confidence === "number" ? Math.round(alt.confidence * 100) : null;
+        updateStatus(`Recognized (${recognition.lang})${conf !== null ? " — " + conf + "%" : ""}. Translating...`, true);
+        let english = spoken;
+        try {
+          const resp = await fetch("/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: spoken })
+          });
+          const data = await resp.json();
+          if (!resp.ok || data.error) throw new Error(data.error || "Translation failed");
+          english = data.text || spoken;
+        } catch (e) {
+          console.warn("Translation failed, using raw speech:", e);
+        }
+        if (REPLACE_TEXT) descriptionField.value = english;
+        else descriptionField.value += (descriptionField.value ? " " : "") + english;
+        updateStatus("Inserted recognized text.", false);
+      } finally {
+        shouldFallback = false;
+        langIndex = 0;
+        stopRecognition();
+      }
+    };
+    recognition.onend = () => {
+      if (isRecording && shouldFallback && langIndex === 1) {
+        shouldFallback = false;
+        startRecognition();
+        return;
+      }
+      stopRecognition();
+    };
+    try { recognition.start(); } catch (err) {
+      updateStatus("Cannot start recognition: " + err.message, true);
+    }
+  }
+
+  function stopRecognition() {
+    try { recognition && recognition.stop(); } catch (_) {}
+    isRecording = false;
+    micBtn.classList.remove("recording");
+    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+    micBtn.setAttribute("aria-pressed", "false");
+    updateStatus("", false);
+  }
+  
+  document.getElementById("search-form").addEventListener("submit", function() {
+      document.getElementById("loading-overlay").classList.remove("d-none");
+  });
+
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
