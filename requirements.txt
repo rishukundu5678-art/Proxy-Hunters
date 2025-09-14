@@ -1,7 +1,10 @@
 flask
 gunicorn
+<<<<<<< HEAD
 flask_sqlalchemy
 pandas
 sentence-transformers
 scikit-learn
 deep_translator
+=======
+>>>>>>> 6a0c94e (Add gunicorn to requirements.txt)
