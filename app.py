@@ -2,11 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
-from flask_mail import Mail
 import requests, csv, pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from deep_translator import GoogleTranslator
+from waitress import serve
 
 app = Flask(__name__)
 app.secret_key = "secret-key"
@@ -22,16 +22,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 # ---------------------------
-# Mail setup
-# ---------------------------
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
-app.config['MAIL_PASSWORD'] = 'your_app_password'
-mail = Mail(app)
-
-# ---------------------------
 # User model
 # ---------------------------
 class User(db.Model, UserMixin):
@@ -44,15 +34,21 @@ class User(db.Model, UserMixin):
     college = db.Column(db.String(150), nullable=False)
     class_name = db.Column(db.String(50), nullable=False)
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 # ---------------------------
-# Semantic model
+# Semantic model (Lazy Loading to save memory)
 # ---------------------------
-model = SentenceTransformer("all-MiniLM-L12-v2")
+model = None
+
+def get_model():
+    global model
+    if model is None:
+        # ✅ Using a smaller model to reduce Render memory usage
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+    return model
 
 # ---------------------------
 # RapidAPI credentials
@@ -85,8 +81,9 @@ def match_jobs_semantic(user_input, jobs, title_key="job_title"):
     if not jobs:
         return []
     titles = [job.get(title_key, "") for job in jobs]
-    user_emb = model.encode([user_input])
-    job_embs = model.encode(titles)
+    model_instance = get_model()  # ✅ load model only when needed
+    user_emb = model_instance.encode([user_input])
+    job_embs = model_instance.encode(titles)
     scores = cosine_similarity(user_emb, job_embs)[0]
     for i, job in enumerate(jobs):
         job["match_score"] = round(float(scores[i]) * 100, 2)
@@ -211,7 +208,6 @@ def register():
         college = request.form["college"]
         class_name = request.form["class_name"]
 
-
         if request.form["password"] != confirm:
             flash("Passwords do not match", "danger")
             return redirect(url_for("register"))
@@ -221,7 +217,7 @@ def register():
             flash("Email already registered. Please login.", "warning")
             return redirect(url_for("login"))
 
-        user = User(username=username, email=email, password=password, mobile=mobile,roll_no=roll_no,college=college,class_name=class_name)
+        user = User(username=username, email=email, password=password, mobile=mobile, roll_no=roll_no, college=college, class_name=class_name)
         db.session.add(user)
         db.session.commit()
 
@@ -269,5 +265,5 @@ def translate():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
-
+    # ✅ Use waitress for production-like server
+    serve(app, host="0.0.0.0", port=8080)
