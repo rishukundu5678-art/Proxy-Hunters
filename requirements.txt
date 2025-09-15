@@ -1,8 +1,10 @@
 flask
 gunicorn
 flask_sqlalchemy
+flask_login
 pandas
 sentence-transformers
 scikit-learn
 deep_translator
 flask_bcrypt
+waitress
