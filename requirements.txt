@@ -2,6 +2,7 @@ flask
 gunicorn
 flask_sqlalchemy
 flask_login
+flask_mail
 pandas
 sentence-transformers
 scikit-learn
